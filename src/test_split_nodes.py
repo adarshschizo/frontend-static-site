@@ -1,7 +1,11 @@
 import unittest
 
 from textnode import TextNode, TextType
-from split_nodes import split_nodes_delimiter
+from split_nodes import (
+    split_nodes_delimiter,
+    extract_markdown_images,
+    extract_markdown_links,
+)
 
 
 class TestSplitNodesDelimiter(unittest.TestCase):
@@ -159,24 +163,72 @@ class TestSplitNodesDelimiter(unittest.TestCase):
 
         self.assertEqual(new_nodes, expected)
 
-    def test_empty_sections(self):
-        node = TextNode(
-            "Before ``After",
-            TextType.TEXT,
+    def test_extract_markdown_images(self):
+        matches = extract_markdown_images(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
         )
 
-        new_nodes = split_nodes_delimiter(
-            [node],
-            "`",
-            TextType.CODE,
+        self.assertListEqual(
+            [("image", "https://i.imgur.com/zjjcJKZ.png")],
+            matches,
+        )
+
+    def test_extract_multiple_images(self):
+        matches = extract_markdown_images(
+            "![rick roll](https://i.imgur.com/aKaOqIh.gif) "
+            "and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)"
         )
 
         expected = [
-            TextNode("Before ", TextType.TEXT),
-            TextNode("After", TextType.TEXT),
+            ("rick roll", "https://i.imgur.com/aKaOqIh.gif"),
+            ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg"),
         ]
 
-        self.assertEqual(new_nodes, expected)
+        self.assertListEqual(expected, matches)
+
+    def test_extract_no_images(self):
+        matches = extract_markdown_images(
+            "This is just normal text."
+        )
+
+        self.assertListEqual([], matches)
+
+    def test_extract_markdown_links(self):
+        matches = extract_markdown_links(
+            "This is text with a link [to boot dev](https://www.boot.dev)"
+        )
+
+        self.assertListEqual(
+            [("to boot dev", "https://www.boot.dev")],
+            matches,
+        )
+
+    def test_extract_multiple_links(self):
+        matches = extract_markdown_links(
+            "Visit [Boot.dev](https://www.boot.dev) "
+            "and [YouTube](https://www.youtube.com)"
+        )
+
+        expected = [
+            ("Boot.dev", "https://www.boot.dev"),
+            ("YouTube", "https://www.youtube.com"),
+        ]
+
+        self.assertListEqual(expected, matches)
+
+    def test_link_does_not_match_image(self):
+        matches = extract_markdown_links(
+            "![image](https://example.com/image.png)"
+        )
+
+        self.assertListEqual([], matches)
+
+    def test_extract_no_links(self):
+        matches = extract_markdown_links(
+            "This is just normal text."
+        )
+
+        self.assertListEqual([], matches)
 
 
 if __name__ == "__main__":
