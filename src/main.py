@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 
 from block import markdown_to_html_node
 
@@ -29,7 +30,7 @@ def extract_title(markdown):
     raise Exception("No h1 header found")
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(
         f"Generating page from {from_path} "
         f"to {dest_path} using {template_path}"
@@ -47,6 +48,16 @@ def generate_page(from_path, template_path, dest_path):
     full_html = template.replace("{{ Title }}", title)
     full_html = full_html.replace("{{ Content }}", html)
 
+    full_html = full_html.replace(
+        'href="/',
+        f'href="{basepath}',
+    )
+
+    full_html = full_html.replace(
+        'src="/',
+        f'src="{basepath}',
+    )
+
     dest_dir = os.path.dirname(dest_path)
 
     if dest_dir:
@@ -56,7 +67,12 @@ def generate_page(from_path, template_path, dest_path):
         f.write(full_html)
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(
+    dir_path_content,
+    template_path,
+    dest_dir_path,
+    basepath,
+):
     for entry in os.listdir(dir_path_content):
         entry_path = os.path.join(dir_path_content, entry)
 
@@ -73,6 +89,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                     entry_path,
                     template_path,
                     dest_path,
+                    basepath,
                 )
 
         else:
@@ -87,16 +104,20 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                 entry_path,
                 template_path,
                 new_dest_dir,
+                basepath,
             )
 
 
 def main():
-    copy_static_to_public("static", "public")
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
+
+    copy_static_to_public("static", "docs")
 
     generate_pages_recursive(
         "content",
         "template.html",
-        "public",
+        "docs",
+        basepath,
     )
 
 
