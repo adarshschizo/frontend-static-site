@@ -1,6 +1,6 @@
 import unittest
 
-from block import markdown_to_blocks
+from block import BlockType, block_to_block_type, markdown_to_blocks
 
 
 class TestMarkdownToBlocks(unittest.TestCase):
@@ -124,6 +124,227 @@ Third block
         self.assertEqual(
             blocks,
             [],
+        )
+
+
+class TestBlockToBlockType(unittest.TestCase):
+
+    def test_paragraph(self):
+        block = "This is a normal paragraph."
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
+        )
+
+    def test_multiline_paragraph(self):
+        block = (
+            "This is a paragraph.\n"
+            "This is still the same paragraph."
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
+        )
+
+    def test_heading_level_1(self):
+        block = "# Heading"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.HEADING,
+        )
+
+    def test_heading_level_2(self):
+        block = "## Heading"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.HEADING,
+        )
+
+    def test_heading_level_3(self):
+        block = "### Heading"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.HEADING,
+        )
+
+    def test_heading_level_4(self):
+        block = "#### Heading"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.HEADING,
+        )
+
+    def test_heading_level_5(self):
+        block = "##### Heading"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.HEADING,
+        )
+
+    def test_heading_level_6(self):
+        block = "###### Heading"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.HEADING,
+        )
+
+    def test_invalid_heading_without_space(self):
+        block = "###Heading"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
+        )
+
+    def test_invalid_heading_too_many_hashes(self):
+        block = "####### Heading"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
+        )
+
+    def test_code_block(self):
+        block = "```\nprint('Hello, world!')\n```"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.CODE,
+        )
+
+    def test_multiline_code_block(self):
+        block = (
+            "```\n"
+            "def hello():\n"
+            "    print('Hello')\n"
+            "\n"
+            "hello()\n"
+            "```"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.CODE,
+        )
+
+    def test_invalid_code_block(self):
+        block = "```\nprint('Hello')"
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
+        )
+
+    def test_quote_block(self):
+        block = (
+            "> This is a quote\n"
+            "> This is another quote"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.QUOTE,
+        )
+
+    def test_quote_without_space(self):
+        block = (
+            ">First quote\n"
+            ">Second quote"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.QUOTE,
+        )
+
+    def test_invalid_quote_block(self):
+        block = (
+            "> First quote\n"
+            "This line is not a quote"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
+        )
+
+    def test_unordered_list(self):
+        block = (
+            "- First item\n"
+            "- Second item\n"
+            "- Third item"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.UNORDERED_LIST,
+        )
+
+    def test_unordered_list_requires_space(self):
+        block = (
+            "- First item\n"
+            "-Second item"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
+        )
+
+    def test_ordered_list(self):
+        block = (
+            "1. First item\n"
+            "2. Second item\n"
+            "3. Third item"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.ORDERED_LIST,
+        )
+
+    def test_ordered_list_must_start_at_one(self):
+        block = (
+            "2. First item\n"
+            "3. Second item\n"
+            "4. Third item"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
+        )
+
+    def test_ordered_list_must_increment(self):
+        block = (
+            "1. First item\n"
+            "2. Second item\n"
+            "4. Third item"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
+        )
+
+    def test_ordered_list_requires_space(self):
+        block = (
+            "1. First item\n"
+            "2.Second item\n"
+            "3. Third item"
+        )
+
+        self.assertEqual(
+            block_to_block_type(block),
+            BlockType.PARAGRAPH,
         )
 
 
